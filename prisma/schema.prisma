@@ -11,3 +11,64 @@ generator client {
 datasource db {
   provider = "postgresql"
 }
+
+model user {
+  id            String @id @default(uuid())
+  profile_url   String
+  username      String
+  email         String @unique
+  password      String
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  accounts      account[]
+}
+
+enum AccountName {
+  cash
+  bank
+  gcash
+  maya
+  other
+}
+
+enum AccountType {
+  cash
+  bank
+  credit
+  e_wallet
+}
+
+model account {
+  id              String @id @default(uuid())
+  user_id         String
+  account_name    AccountName @default(cash)
+  type            AccountType @default(cash)
+  balance         Decimal @default(0)
+  user            user @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  transactions    transaction[]
+  @@index(user_id)
+}
+
+enum TransactionType {
+  income
+  expense
+}
+
+model category {
+  id            String @id @default(uuid())
+  name          String
+  description   String @default("")
+  transactions  transaction[]
+}
+
+model transaction {
+  id            String @id @default(uuid())
+  date          DateTime @default(now())
+  amount        Decimal @default(0)
+  type          TransactionType @default(income)
+  category_id   String
+  account_id    String
+  description   String @default("")
+  category      category @relation(fields: [category_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  account       account @relation(fields: [account_id], references: [id], onDelete: Cascade, onUpdate: Cascade)
+}
