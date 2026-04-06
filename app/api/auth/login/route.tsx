@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
+import { signToken } from "@/lib/jwt";
 
 type LoginCredentials = {
   email: string;
@@ -24,8 +25,11 @@ export async function POST(request: NextRequest) {
         { message: "Invalid email or password" },
         { status: 401 },
       );
+
+    const token = signToken({ sub: user.id, email: user.email });
+
     return NextResponse.json(
-      { message: "User logged in successfully" },
+      { message: "User logged in successfully", token },
       { status: 200 },
     );
   } catch (error) {

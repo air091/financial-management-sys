@@ -1,21 +1,28 @@
 import jwt, { type SignOptions } from "jsonwebtoken";
 
-const SECRET: string = process.env.JWT_SECRET!;
-const EXPIRES: string = process.env.JWT_EXPIRES_IN as string;
+const secret: string = process.env.JWT_SECRET as string;
+const expires: string = process.env.JWT_EXPIRES_IN as string;
 
-if (!SECRET) throw new Error("JWT secret not found");
-if (!EXPIRES) throw new Error("JWT expires not found");
+if (!secret) throw new Error("JWT secret not found");
+if (!expires) throw new Error("JWT expires not found");
 
 const options: SignOptions = {
-  expiresIn: Number(EXPIRES),
+  expiresIn: expires as SignOptions["expiresIn"],
   algorithm: "HS256",
 };
 
 type JwtPayload = {
-  user_id: string;
+  sub: string;
   email: string;
 };
 
-export function signToken(payload: JwtPayload) {
-  return jwt.sign(payload, SECRET, options);
+export function signToken(payload: JwtPayload): string {
+  return jwt.sign(payload, secret, options);
+}
+
+export function verifyToken(token: string): JwtPayload {
+  const decoded = jwt.verify(token, secret, { algorithms: ["HS256"] });
+
+  if (typeof decoded === "string") throw new Error("Invalid token payload");
+  return decoded as JwtPayload;
 }
