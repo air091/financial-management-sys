@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import { prisma } from "@/lib/prisma";
 import { signToken } from "@/lib/jwt";
+import { cookies } from "next/headers";
 
 type LoginCredentials = {
   email: string;
@@ -27,9 +28,18 @@ export async function POST(request: NextRequest) {
       );
 
     const token = signToken({ sub: user.id, email: user.email });
+    const cookieStore = await cookies();
+
+    cookieStore.set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60
+    })
 
     return NextResponse.json(
-      { message: "User logged in successfully", token },
+      { message: "User logged in successfully" },
       { status: 200 },
     );
   } catch (error) {
